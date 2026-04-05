@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouveau Tech Menu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- خط تجوال -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <!-- مكتبة قراءة ملفات CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+        /* تصميم مخصص للألوان الذهبية */
+        .gold-text { color: #d4af37; }
+        .gold-bg { background-color: #d4af37; }
+        .active-cat { background-color: #d4af37; color: white; }
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-3px); shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 pb-20">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-md mx-auto p-4 flex flex-col items-center">
+            <img src="logo.png" alt="Logo" class="w-24 h-24 mb-2 object-contain">
+            <h1 class="text-2xl font-bold text-gray-900">NOUVEAU TECH</h1>
+            <p class="text-gray-500 text-xs">مقهى عصري - وجدة</p>
+            
+            <!-- Categories (ستملأ تلقائياً) -->
+            <div id="categories" class="flex overflow-x-auto gap-2 mt-4 pb-2 w-full scrollbar-hide">
+                <button class="active-cat px-4 py-1 rounded-full text-sm whitespace-nowrap bg-gray-100">جاري التحميل...</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Menu Area -->
+    <main class="max-w-md mx-auto p-4">
+        <div id="menu-items" class="grid gap-4">
+            <!-- سيتم وضع العناصر هنا بواسطة الجافاسكربت -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 w-full bg-gray-900 text-white text-center p-3 text-xs">
+        <p>Powered by Nouveau Tech</p>
+    </footer>
+
+    <script>
+        //  ضع رابط CSV الذي نسخته من جوجل شيت هنا 👇
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSIWHuGH6ncA4zp6A43RdxyxM3yibzV65Lpq4hdgc6NhVv4yjZfRpNfUFJMRbr6cP56Ds7oD9lye1B3/pub?output=tsv';
+
+        let allData = [];
+
+        function init() {
+            Papa.parse(SHEET_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    allData = results.data.filter(item => item.name); // تصفية الصفوف الفارغة
+                    renderCategories();
+                    renderMenu('all');
+                }
+            });
+        }
+
+        function renderCategories() {
+            const cats = ['all', ...new Set(allData.map(d => d.category))];
+            const container = document.getElementById('categories');
+            container.innerHTML = cats.map(c => `
+                <button onclick="renderMenu('${c}')" class="cat-btn px-4 py-1 rounded-full text-sm whitespace-nowrap bg-gray-100 hover:bg-gray-200 transition ${c==='all'?'active-cat':''}">
+                    ${c === 'all' ? 'الكل' : c}
+                </button>
+            `).join('');
+        }
+
+        function renderMenu(cat) {
+            // تحديث شكل الأزرار
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.remove('active-cat');
+                if(b.textContent.includes(cat === 'all' ? 'الكل' : cat)) b.classList.add('active-cat');
+            });
+
+            const container = document.getElementById('menu-items');
+            const items = cat === 'all' ? allData : allData.filter(d => d.category === cat);
+
+            container.innerHTML = items.map(item => `
+                <div class="card bg-white p-3 rounded-xl shadow-sm flex gap-3 items-center border border-gray-100">
+                    <img src="${item.image || 'https://via.placeholder.com/80'}" class="w-20 h-20 rounded-lg object-cover bg-gray-100 flex-shrink-0">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-lg">${item.name}</h3>
+                            <span class="font-bold gold-text text-lg">${item.price}</span>
+                        </div>
+                        <p class="text-gray-500 text-xs mt-1">${item.desc || ''}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
